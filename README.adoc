@@ -1,8 +1,16 @@
 == Blood Pressure Application
 
+
+NOTE
+====
+This project was created based on Java 11 and Gradle 6.5. It no longer compiles and is stored as reference material at present.
+====
+
+
 === Application Build
 
-To build the application and run the tests (code quality, sonarlint, unit tests, integration tests) run the following command
+To build the application and run the tests (code quality, sonarlint, unit tests, integration tests) run the following command.
+
 
 [source,]
 ----
