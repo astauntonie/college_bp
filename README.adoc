@@ -1,7 +1,7 @@
 == Blood Pressure Application
 
 
-NOTE
+[NOTE]
 ====
 This project was created based on Java 11 and Gradle 6.5. It no longer compiles and is stored as reference material at present.
 ====
