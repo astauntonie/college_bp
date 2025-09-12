@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>BP Category Calculator</title>
+    <!-- Bootstrap core CSS -->
+    <link href="../static/css/bootstrap.css" rel="stylesheet" th:href="@{/css/bootstrap.css}"/>
+    <link href="../static/css/site.css" rel="stylesheet" th:href="@{/css/site.css}"/>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" href="/">BPCalculator</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <form action="#" th:action="@{/}" th:object="${bloodPressureData}" method="post">
+                        <div class="form-group">
+                            <label class="control-label">Systolic</label>
+                            <input class="form-control" th:field="*{systolic}"/>
+                            <span class="text-danger" th:if="${#fields.hasErrors('systolic')}" th:errors="*{systolic}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Diastolic</label>
+                            <input class="form-control"  th:field="*{diastolic}"/>
+                            <span class="text-danger" th:if="${#fields.hasErrors('diastolic')}" th:errors="*{diastolic}"></span>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Age</label>
+                            <select class="form-control selectpicker" th:field="*{agerange}">
+                                <option value="0" selected>18-79</option>
+                                <option value="1">Over 79 </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Email</label>
+                            <input class="form-control"  th:field="*{email}"/>
+                            <span class="text-danger" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                        </div>
+                        <div class="form-group">
+                            <input type="submit" value="Submit" th:id="submit"/>
+                        </div>
+                    </form>
+                    <br/>
+                    <br/>
+                    <div class="form-group" th:if="${bloodPressureData.category}">
+                        <label class="control-label">Category</label>
+                        <label class="alert alert-primary" th:if="${bloodPressureData.category} == 'Low Blood Pressure'" th:text="*{bloodPressureData.category}" th:id="result"></label>
+                        <label class="alert alert-success" th:if="${bloodPressureData.category} == 'Ideal Blood Pressure'" th:text="*{bloodPressureData.category}" th:id="result"></label>
+                        <label class="alert alert-warning" th:if="${bloodPressureData.category} == 'Pre-High Blood Pressure'" th:text="*{bloodPressureData.category}" th:id="result"></label>
+                        <label class="alert alert-danger" th:if="${bloodPressureData.category} == 'High Blood Pressure'" th:text="*{bloodPressureData.category}" th:id="result"></label>
+                    </div>
+                    <br/>
+                    <br/>
+                    <div class="form-group" th:if="${userdb}">
+                        <label class="control-label">Previous Results</label>
+                        <table class="table table-striped table-responsive-md">
+                            <caption>Previous Results</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col" th:id="table-systolic-header">Systolic</th>
+                                <th scope="col" th:id="table-diastolic-header">Diastolic</th>
+                                <th scope="col" th:id="table-email-header">Email</th>
+                                <th scope="col" th:id="table-category-header">Category</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="user: ${userdb}">
+                                <td th:text="${user.systolic}"></td>
+                                <td th:text="${user.diastolic}"></td>
+                                <td th:text="${user.email}"></td>
+                                <td class="alert alert-primary" th:if="${user.category} == 'Low Blood Pressure'" th:text="Low"></td>
+                                <td class="alert alert-success" th:if="${user.category} == 'Ideal Blood Pressure'" th:text="Ideal" ></td>
+                                <td class="alert alert-warning" th:if="${user.category} == 'Pre-High Blood Pressure'" th:text="Pre-High"></td>
+                                <td class="alert alert-danger" th:if="${user.category} == 'High Blood Pressure'" th:text="High"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2020 - BPCalculator
+        </div>
+    </footer>
+
+    <script src="../static/js/jquery.js"></script>
+    <script src="../static/js/bootstrap.js"></script>
+</body>
+</html>

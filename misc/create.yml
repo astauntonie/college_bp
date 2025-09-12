@@ -1,0 +1,79 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- k8s
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- task: AzureKeyVault@1
+  inputs:
+    azureSubscription: 'eadbp'
+    KeyVaultName: 'eadbpkeys'
+    SecretsFilter: '*'
+    RunAsPreJob: true
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    failOnStderr: true
+    script: |
+      printf "appId    = \"$(appId)\"\n" | tee -a $(System.DefaultWorkingDirectory)/terraform/k8s/terraform.tfvars
+      printf "password = \"$(password)\"\n" | tee -a $(System.DefaultWorkingDirectory)/terraform/k8s/terraform.tfvars
+      printf "tenant = \"$(tenant)\"\n" | tee -a $(System.DefaultWorkingDirectory)/terraform/k8s/terraform.tfvars
+
+- task: TerraformCLI@0
+  inputs:
+    command: 'init'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/k8s'
+    backendType: 'azurerm'
+    backendServiceArm: 'asdevops'
+    backendAzureRmResourceGroupName: 'eadbprg'
+    backendAzureRmStorageAccountName: 'eadbpstore'
+    backendAzureRmContainerName: 'tfstate'
+    backendAzureRmKey: 'eadpb'
+    allowTelemetryCollection: true
+
+- task: TerraformCLI@0
+  inputs:
+    command: 'plan'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/k8s'
+    environmentServiceName: 'asdevops'
+    commandOptions: '-out aks_plan'
+    allowTelemetryCollection: true
+    publishPlanResults: 'provision_plan'
+
+- task: TerraformCLI@0
+  inputs:
+    command: 'apply'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/k8s'
+    environmentServiceName: 'asdevops'
+    commandOptions: '"aks_plan"'
+    allowTelemetryCollection: true
+
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Azure Resource Manager'
+    azureSubscriptionEndpoint: 'asdevops'
+    azureResourceGroup: 'eadbprg'
+    kubernetesCluster: 'eadbpaks'
+    command: 'create'
+    arguments: 'namespace stage'
+    secretType: 'dockerRegistry'
+    containerRegistryType: 'Azure Container Registry'
+  
+- task: Kubernetes@1
+  inputs:
+    connectionType: 'Azure Resource Manager'
+    azureSubscriptionEndpoint: 'asdevops'
+    azureResourceGroup: 'eadbprg'
+    kubernetesCluster: 'eadbpaks'
+    command: 'create'
+    arguments: 'namespace production'
+    secretType: 'dockerRegistry'
+    containerRegistryType: 'Azure Container Registry'

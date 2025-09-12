@@ -1,0 +1,26 @@
+# Default values for asbpbe.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+pathName: 'blue'
+livePathName: 'blue'
+dbservice: 'mongodb'
+dbname: 'bp_prod'
+dbport: {}
+
+image:
+  repository: eadbpacr.azurecr.io/bloodpressure-fe
+  pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+service:
+  type: LoadBalancer
+  port: 80
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80

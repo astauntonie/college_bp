@@ -1,0 +1,49 @@
+== Blood Pressure Application
+
+=== Application Build
+
+To build the application and run the tests (code quality, sonarlint, unit tests, integration tests) run the following command
+
+[source,]
+----
+cd backend
+./gradlew clean build
+cd ../frontend
+./gradlew clean build
+----
+
+The test reports can be seen in build/reports
+
+
+To run the application run the following with Java 11 or greater (after the build is complete)
+[source,]
+----
+java -jar  be/build/libs/bloodpressure-<version>.jar
+java -jar  fe/build/libs/bloodpressure-<version>.jar
+----
+
+Then open a web browser to http://localhost:8081
+
+The default information, for backend host / port or frontend host / port can be over-ridden with the following
+environment variables
+[source,]
+----
+export FEHOST=
+exoprt FEPORT=
+export BEHOST=
+export BEPORT=
+export DBHOST=
+export DBPORT=
+----
+
+
+=== E2E
+
+If the application is running you can run the end to end tests against it by doing the following
+[source,]
+----
+cd e2e
+./gradlew clean test
+----
+
+The information on tests can be seen in build/reports after the run.

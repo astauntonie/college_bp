@@ -1,0 +1,27 @@
+= Getting Started With Spring REST Docs
+
+This is an example output for a service running at http://localhost:8082:
+
+
+For missing Systolic information
+.request
+include::{snippets}/missing_diastolic/http-request.adoc[]
+
+.response
+include::{snippets}/missing_diastolic/http-response.adoc[]
+
+
+For missing Diastolic information
+.request
+include::{snippets}/missing_systolic/http-request.adoc[]
+
+.response
+include::{snippets}/missing_systolic/http-response.adoc[]
+
+
+For a valid request
+.request
+include::{snippets}/valid/http-request.adoc[]
+
+.response
+include::{snippets}/valid/http-response.adoc[]

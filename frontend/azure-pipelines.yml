@@ -1,0 +1,110 @@
+trigger:
+- main
+
+
+variables:
+  # Agent VM image name
+  vmImageName: 'ubuntu-latest'
+  gitCommit: $(Build.SourceVersion)
+  buildNum: $(Build.BuildId) 
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: GradlePackageAndPublishArtifacts
+    displayName: Gradle Package and Publish Artifacts
+    pool:
+      vmImage: $(vmImageName)
+    
+    steps:
+    - task: JavaToolInstaller@0
+      inputs:
+        versionSpec: '11'
+        jdkArchitectureOption: 'x64'
+        jdkSourceOption: 'PreInstalled'
+    - task: SonarCloudPrepare@1
+      inputs:
+        SonarCloud: 'sonarcloud'
+        organization: 'x00004139'
+        scannerMode: 'Other'
+        extraProperties: |
+          sonar.projectKey=X00004139_frontend
+          sonar.projectName=frontend
+
+    - script: docker run --name mongodb -d -p 27017:27017 mongo
+      displayName: Run mongodb container
+    
+    - task: Gradle@2
+      displayName: Build Backend Code and Run Unit tests
+      inputs:
+        gradleWrapperFile: 'gradlew'
+        tasks: 'build'
+        publishJUnitResults: true
+        testResultsFiles: 'build/reports/**/*.xml'
+        javaHomeOption: 'JDKVersion'
+        jdkVersionOption: '1.11'
+        gradleOptions: '-Xmx2048m'
+        sonarQubeRunAnalysis: true
+        sqGradlePluginVersionChoice: 'build'
+        options: '-P version=1.1.0.$(buildNum)'
+        
+    - task: SonarCloudPublish@1
+      inputs:
+        pollingTimeoutSec: '300'
+
+    - task: WhiteSource Bolt@20
+
+    - task: Bash@3
+      displayName: Run Trivy Container Scanner
+      inputs:
+        targetType: 'inline'
+        script: |
+          mkdir mkdir -p $(Pipeline.Workspace)/cache
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(Pipeline.Workspace)/cache:/root/.cache/ aquasec/trivy --exit-code 0 --severity LOW,MEDIUM,HIGH --ignore-unfixed mscdevops4139/bloodpressure-be:latest
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v $(Pipeline.Workspace)/cache:/root/.cache/ aquasec/trivy --exit-code 1 --severity CRITICAL --ignore-unfixed mscdevops4139/bloodpressure-be:latest
+    - task: CopyFiles@2
+      displayName: Copy JUnit XML Files
+      inputs:
+        SourceFolder: 'build/reports/test/test/junitXml'
+        Contents: '**.xml'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+        OverWrite: true
+    
+    - task: CopyFiles@2
+      displayName: Copy Jacoco XML Files
+      inputs:
+        SourceFolder: 'build/reports/jacoco/test/'
+        Contents: '**.xml'
+        TargetFolder: '$(build.artifactstagingdirectory)'
+        OverWrite: true
+         
+    - task: Bash@3
+      displayName: Backend Container - Retag
+      inputs:
+        targetType: 'inline'
+        script: |
+          docker tag mscdevops4139/bloodpressure-fe:latest eadbpacr.azurecr.io/bloodpressure-fe:$(buildNum)
+          docker tag mscdevops4139/bloodpressure-fe:latest eadbpacr.azurecr.io/bloodpressure-fe:latest
+          
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'eadbpacr'
+        repository: 'bloodpressure-fe'
+        command: 'push'
+        tags: '$(buildNum)'
+    
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'eadbpacr'
+        repository: 'bloodpressure-fe'
+        command: 'push'
+        tags: 'latest'
+  
+    - task: Bash@3
+      inputs:
+        targetType: 'inline'
+        script: |
+          printf "Git Commit:\t$(gitCommit)\n"
+          printf "Build Number:\t$(buildNum)\n"
+        failOnStderr: true

@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "asbpfe.fullname" . }}
+  labels:
+    {{- include "asbpfe.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "asbpfe.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "asbpfe.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: frontend-{{ .Release.Namespace }}
+          env:
+          - name: DBHOST
+            value: {{ .Values.dbservice | default "mongodb" | quote }}
+          - name: DBPORT
+            value: {{ .Values.dbport | default "27017" | quote }}
+          - name: DBNAME
+            value: {{ .Values.dbname | default "bp_stage" | quote }}
+          - name: BEHOST
+            value: backend-{{ .Release.Namespace }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http

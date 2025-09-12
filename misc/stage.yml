@@ -1,0 +1,75 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- helm
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+    
+    - task: HelmDeploy@0
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: 'asdevops'
+        azureResourceGroup: 'eadbprg'
+        kubernetesCluster: 'eadbpaks'
+        namespace: 'stage'
+        command: 'get'
+        arguments: 'all'
+
+    - task: HelmDeploy@0
+      displayName: Remove Frontend Application
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: 'asdevops'
+        azureResourceGroup: 'eadbprg'
+        kubernetesCluster: 'eadbpaks'
+        namespace: '$(deployment)'
+        command: 'uninstall'
+        arguments: 'stage-frontend'
+
+    - task: HelmDeploy@0
+      displayName: Install Frontend Application
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: 'asdevops'
+        azureResourceGroup: 'eadbprg'
+        kubernetesCluster: 'eadbpaks'
+        namespace: '$(deployment)'
+        command: 'install'
+        chartType: 'FilePath'
+        chartPath: 'helm/asbpfe'
+        releaseName: 'stage-frontend'
+        valueFile: 'helm/asbpfe/stage.yaml'
+
+    - task: HelmDeploy@0
+      displayName: Remove Backend Application
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: 'asdevops'
+        azureResourceGroup: 'eadbprg'
+        kubernetesCluster: 'eadbpaks'
+        namespace: '$(deployment)'
+        command: 'uninstall'
+        arguments: 'stage-backend'
+
+    - task: HelmDeploy@0
+      displayName: Install Backend Application
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscription: 'asdevops'
+        azureResourceGroup: 'eadbprg'
+        kubernetesCluster: 'eadbpaks'
+        namespace: '$(deployment)'
+        command: 'install'
+        chartType: 'FilePath'
+        chartPath: 'helm/asbpbe'
+        releaseName: 'stage-backend'
+        valueFile: 'helm/asbpbe/stage.yaml'
+        
+
+

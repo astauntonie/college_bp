@@ -1,0 +1,42 @@
+trigger:
+- k8s_destroy
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+- task: AzureKeyVault@1
+  inputs:
+    azureSubscription: 'eadbp'
+    KeyVaultName: 'eadbpkeys'
+    SecretsFilter: '*'
+    RunAsPreJob: true
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    failOnStderr: true
+    script: |
+      printf "appId    = \"$(appId)\"\n" | tee -a $(System.DefaultWorkingDirectory)/terraform/acr/terraform.tfvars
+      printf "password = \"$(password)\"\n" | tee -a $(System.DefaultWorkingDirectory)/terraform/acr/terraform.tfvars
+      printf "tenant = \"$(tenant)\"\n" | tee -a $(System.DefaultWorkingDirectory)/terraform/acr/terraform.tfvars
+
+- task: TerraformCLI@0
+  inputs:
+    command: 'init'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/acr'
+    backendType: 'azurerm'
+    backendServiceArm: 'asdevops'
+    backendAzureRmResourceGroupName: 'eadbprg'
+    backendAzureRmStorageAccountName: 'eadbpstore'
+    backendAzureRmContainerName: 'tfstate'
+    backendAzureRmKey: 'eadbp_acr_state'
+    allowTelemetryCollection: true
+
+- task: TerraformCLI@0
+  inputs:
+    command: 'destroy'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/terraform/acr'
+    environmentServiceName: 'asdevops'
+    allowTelemetryCollection: true
