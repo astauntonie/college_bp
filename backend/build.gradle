@@ -84,7 +84,7 @@ asciidoctor {
 test.finalizedBy jacocoTestReport
 project.tasks["sonarqube"].dependsOn test
 tasks.build.dependsOn tasks.jibDockerBuild
-tasks.build.dependsOn tasks.asciidoctor
+//tasks.build.dependsOn tasks.asciidoctor
 
 jib {
 	from {

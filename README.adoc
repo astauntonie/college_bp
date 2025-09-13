@@ -3,55 +3,66 @@
 
 [NOTE]
 ====
-This project was created based on Java 11 and Gradle 6.5. It no longer compiles and is stored as reference material at present.
+This project was created based on Java 11 and Gradle 6.5. The application expects Java 11 to be available, but should work on later versions.
+
+To run this correctly you must have Docker installed, and before running the build phases below MongoDB must be running.
+
+docker pull mongodb/mongodb-community-server:7.0-ubi8
+docker run --name mongodb -d -p 27017:27017 mongodb/mongodb-community-server:7.0-ubi8
+
+This will run MongoDB on Port 27017.
+
+The latest version of teh application, defined in the build process, is 1.1.0 and should be replaced where <version> is seen below.
 ====
 
 
 === Application Build
 
-To build the application and run the tests (code quality, sonarlint, unit tests, integration tests) run the following command.
+To build the application and run the tests (code quality, sonarlint, unit tests, integration tests) run the following commands.
 
 
-[source,]
+[source,shell]
 ----
 cd backend
 ./gradlew clean build
 cd ../frontend
 ./gradlew clean build
+cd ..
 ----
 
 The test reports can be seen in build/reports
 
 
 To run the application run the following with Java 11 or greater (after the build is complete)
-[source,]
+[source,shell]
 ----
-java -jar  be/build/libs/bloodpressure-<version>.jar
-java -jar  fe/build/libs/bloodpressure-<version>.jar
+java -jar  backend/build/libs/bloodpressure-<version>.jar &
+java -jar  frontend/build/libs/bloodpressure-<version>.jar &
 ----
 
-Then open a web browser to http://localhost:8081
+By default the following is expected
+[%header,format=csv]
+|===
+Application,Host,Port
+MongoDB Database,localhost,27017
+Backend,localhost,8082
+Frontend,localhost,8081
+|===
 
-The default information, for backend host / port or frontend host / port can be over-ridden with the following
+
+
+Then open a web browser to http://localhost:8081 to view the applictation.
+
+When execuiting the applictions the default information, for backend host / port or frontend host / port, can be over-ridden with the following
 environment variables
 [source,]
 ----
 export FEHOST=
-exoprt FEPORT=
+export FEPORT=
 export BEHOST=
 export BEPORT=
 export DBHOST=
 export DBPORT=
 ----
 
-
-=== E2E
-
-If the application is running you can run the end to end tests against it by doing the following
-[source,]
-----
-cd e2e
-./gradlew clean test
-----
-
-The information on tests can be seen in build/reports after the run.
+The misc directory contains details sub-directories for Helm, E2E testing (currently not running due to issues with chromedriver in Selenium), K6 Performance tests (also not working).
